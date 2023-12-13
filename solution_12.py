@@ -1,47 +1,42 @@
-def can_fit(space, required_length):
+def get_possible_next_indeces(space, required_length, index):
     possible = []
-    max_i = min(space.index('#') + 1 if '#' in space else len(space), len(space) - required_length + 1)
-    for i in range(0, max_i):
+    max_i = min(space[index:].index('#') + index + 1 if '#' in space[index:] else len(space), len(space) - required_length + 1)
+    for i in range(index, max_i):
         if i + required_length == len(space) or space[i + required_length] != '#':
-            if '.' in space[i:i+required_length]:
+            if '.' in space[i:i + required_length]:
                 continue
-            remainder_space = ''.join(space[i + required_length + 1:]) if len(space) - 1 > i + required_length else ''
-            taken_space = [x for x in space[:i + required_length + 1]]
-            for j in range(0, len(taken_space)):
-                taken_space[j] = '.' if j < i else '#' if j < i + required_length else '.'
-            possible.append((''.join(taken_space), remainder_space))
+            possible.append(i + required_length + 1 if len(space) - 1 > i + required_length else len(space))
     return possible
 
-def find_possible_arrangements(space, required, cache={}):
+def find_possible_arrangements(space, required, index, cache):
     if len(required) == 0:
-        return 0 if '#' in space else 1
-    if sum(required) + len(required) - 1 > len(space):
+        return 0 if '#' in space[index:] else 1
+    if sum(required) + len(required) - 1 > len(space[index:]):
         return 0
     found = 0
-    first_required = required[0]
-    can_fit_spaces = can_fit(space, first_required)
-    for can_fit_space in can_fit_spaces:
-        cache_key = (can_fit_space[1], ','.join([str(x) for x in required[1:]]))
+    possible_next_indeces = get_possible_next_indeces(space, required[0], index)
+    for possible_next_index in possible_next_indeces:
+        cache_key = (possible_next_index, ','.join([str(x) for x in required[1:]]))
         if cache_key not in cache:
-            lower_founds = find_possible_arrangements(can_fit_space[1], required[1:], cache)
+            lower_founds = find_possible_arrangements(space, required[1:], possible_next_index, cache)
             cache[cache_key] = lower_founds
         found += cache[cache_key]
     return found
 
 def solve(puzzle_input):
     condition_records = [(line.split(" ")[0], [int(x) for x in line.split(" ")[1].split(",")]) for line in puzzle_input.strip().splitlines()]
+
     possible = 0
     for condition_record in condition_records:
-        possible += find_possible_arrangements(condition_record[0], condition_record[1])
+        possible += find_possible_arrangements(condition_record[0], condition_record[1], 0, {})
     print(possible)
 
     possible = 0
     for condition_record in condition_records:
         unfolded_0 = condition_record[0] + "?" + condition_record[0] + "?" + condition_record[0] + "?" + condition_record[0] + "?" + condition_record[0]
         unfolded_1 = condition_record[1] + condition_record[1] + condition_record[1] + condition_record[1] + condition_record[1]
-        possible += find_possible_arrangements(unfolded_0, unfolded_1)
+        possible += find_possible_arrangements(unfolded_0, unfolded_1, 0, {})
     print(possible)
-    return
 
 solve('''
 ???????????#??? 5,2,1
@@ -1044,4 +1039,4 @@ solve('''
 ???.#?#?.????? 1,1,1,5
 ??#??.???#?. 1,3,2
 ??#...?#???? 2,6
-    ''')
+''')
