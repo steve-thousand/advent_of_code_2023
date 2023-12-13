@@ -15,6 +15,8 @@ def can_fit(space, required_length):
 def find_possible_arrangements(space, required, cache={}):
     if len(required) == 0:
         return 0 if '#' in space else 1
+    if sum(required) + len(required) - 1 > len(space):
+        return 0
     found = 0
     first_required = required[0]
     can_fit_spaces = can_fit(space, first_required)
